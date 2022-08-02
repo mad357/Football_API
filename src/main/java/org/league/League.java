@@ -1,15 +1,18 @@
 package org.league;
 
+import org.country.Country;
 import org.util.validationgroups.Any;
 import org.util.validationgroups.Create;
 import org.util.validationgroups.Update;
 
+import javax.json.bind.annotation.JsonbPropertyOrder;
 import javax.json.bind.annotation.JsonbTransient;
 import javax.persistence.*;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Null;
 import java.io.Serializable;
 
+@JsonbPropertyOrder( {"id", "name", "country", "aboveLeague", "belowLeague"})
 @Entity
 @Table(name = "LEAGUE")
 public class League implements Serializable {
@@ -25,9 +28,10 @@ public class League implements Serializable {
     @Column(name = "NAME")
     private String name;
 
+    @ManyToOne(fetch = FetchType.LAZY)
     @NotNull(message = "Country cannot be null", groups =  Any.class)
-    @Column(name = "COUNTRY")
-    private String country;
+    @JoinColumn(name = "COUNTRY_ID",referencedColumnName = "COUNTRY_ID")
+    private Country country;
 
     @JsonbTransient
     @OneToOne(fetch = FetchType.LAZY)
@@ -47,20 +51,20 @@ public class League implements Serializable {
         this.id = id;
     }
 
+    public Country getCountry() {
+        return country;
+    }
+
+    public void setCountry(Country country) {
+        this.country = country;
+    }
+
     public String getName() {
         return name;
     }
 
     public void setName(String name) {
         this.name = name;
-    }
-
-    public String getCountry() {
-        return country;
-    }
-
-    public void setCountry(String country) {
-        this.country = country;
     }
 
     public League getAboveLeague() {
