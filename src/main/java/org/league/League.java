@@ -60,7 +60,7 @@ public class League implements Serializable {
             inverseJoinColumns={@JoinColumn(name="LOWER_LEAGUE_ID")})
     private Set<League> lowerLeagueIds = new HashSet<>();
 
-    @ManyToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @ManyToMany(cascade = CascadeType.DETACH, fetch = FetchType.LAZY)
     @JoinTable(name="LEAGUE_RELATION",
             joinColumns={@JoinColumn(name="LOWER_LEAGUE_ID")},
             inverseJoinColumns={@JoinColumn(name="HIGHER_LEAGUE_ID")})
