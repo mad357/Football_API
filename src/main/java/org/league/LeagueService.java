@@ -34,6 +34,9 @@ public class LeagueService {
     @Transactional
     public void update(League league) {
         Set<ConstraintViolation<League>> errors = AppConfig.getValidator().validate(league, Update.class);
+        if (leagueRepository.findByIdOptional(league.getId()).orElse(null) == null) {
+            throw new RuntimeException("League doesn't exist");
+        }
 
         if (errors.size() > 0) {
             throw new RuntimeException(errors.iterator().next().getMessage());
@@ -42,6 +45,7 @@ public class LeagueService {
         if (alreadyExist != null) {
             throw new RuntimeException("League already exist");
         }
+
         leagueRepository.getEntityManager().merge(league);
     }
 

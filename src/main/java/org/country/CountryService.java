@@ -34,7 +34,9 @@ public class CountryService {
     @Transactional
     public void update(Country country) {
         Set<ConstraintViolation<Country>> errors = AppConfig.getValidator().validate(country, Update.class);
-
+        if (countryRepository.findByIdOptional(country.getId()).orElse(null) == null) {
+            throw new RuntimeException("Country doesn't exist");
+        }
         if (errors.size() > 0) {
             throw new RuntimeException(errors.iterator().next().getMessage());
         }
