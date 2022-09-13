@@ -5,7 +5,9 @@ import org.util.validationgroups.Any;
 import org.util.validationgroups.Create;
 import org.util.validationgroups.Update;
 
+import javax.json.bind.annotation.JsonbPropertyOrder;
 import javax.persistence.*;
+import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Null;
 import java.io.Serializable;
@@ -13,7 +15,8 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-//@JsonbPropertyOrder( {"id", "name", "country", "aboveLeague"})
+@JsonbPropertyOrder( {"id", "name", "country", "clubNumber", "promotionNumber", "relegationNumber", "playoffPromotionNumber",
+"playoffRelegationNumber", "lowerLeagueIds", "higherLeagueIds"})
 @Entity
 @Table(name = "LEAGUE")
 public class League implements Serializable {
@@ -35,6 +38,7 @@ public class League implements Serializable {
     private Country country;
 
     @NotNull(message = "Club number cannot be null", groups =  Any.class)
+    @Min(value = 2, message = "Club number must be greater that 1", groups =  Any.class)
     @Column(name = "CLUB_NUMBER")
     private short clubNumber;
 
