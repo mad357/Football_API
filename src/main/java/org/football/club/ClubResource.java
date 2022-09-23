@@ -1,6 +1,4 @@
-package org.club;
-
-import org.club.Club;
+package org.football.club;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;

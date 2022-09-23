@@ -1,9 +1,10 @@
-package org.club;
+package org.football.league;
 
 import io.quarkus.hibernate.orm.panache.PanacheRepository;
+
 import javax.enterprise.context.ApplicationScoped;
 
 @ApplicationScoped
-public class ClubRepository implements IClubRepository, PanacheRepository<Club> {
+public class LeagueRepository implements ILeagueRepository, PanacheRepository<League> {
 
 }

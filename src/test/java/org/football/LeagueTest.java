@@ -1,17 +1,18 @@
-package org;
+package org.football;
 
+import org.football.league.League;
+import org.football.league.LeagueRepository;
+import org.football.league.LeagueService;
+import org.football.util.validationgroups.Create;
+import org.football.util.validationgroups.Update;
 import io.quarkus.hibernate.orm.panache.PanacheQuery;
-import org.country.Country;
+import org.football.country.Country;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
-import org.league.League;
-import org.league.LeagueRepository;
-import org.league.LeagueService;
 import org.mockito.*;
 import org.mockito.stubbing.Answer;
-import org.util.validationgroups.Create;
-import org.util.validationgroups.Update;
+
 import javax.validation.ConstraintViolation;
 import java.util.ArrayList;
 import java.util.List;

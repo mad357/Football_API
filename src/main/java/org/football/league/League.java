@@ -1,9 +1,9 @@
-package org.league;
+package org.football.league;
 
-import org.country.Country;
-import org.util.validationgroups.Any;
-import org.util.validationgroups.Create;
-import org.util.validationgroups.Update;
+import org.football.util.validationgroups.Any;
+import org.football.util.validationgroups.Create;
+import org.football.util.validationgroups.Update;
+import org.football.country.Country;
 
 import javax.json.bind.annotation.JsonbPropertyOrder;
 import javax.persistence.*;

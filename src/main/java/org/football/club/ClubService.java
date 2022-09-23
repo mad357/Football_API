@@ -1,8 +1,8 @@
-package org.club;
+package org.football.club;
 
-import org.AppConfig;
-import org.util.validationgroups.Create;
-import org.util.validationgroups.Update;
+import org.football.util.validationgroups.Create;
+import org.football.util.validationgroups.Update;
+import org.football.AppConfig;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;

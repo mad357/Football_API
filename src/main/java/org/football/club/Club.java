@@ -1,10 +1,10 @@
-package org.club;
+package org.football.club;
 
-import org.country.Country;
-import org.league.League;
-import org.util.validationgroups.Any;
-import org.util.validationgroups.Create;
-import org.util.validationgroups.Update;
+import org.football.league.League;
+import org.football.util.validationgroups.Any;
+import org.football.util.validationgroups.Create;
+import org.football.util.validationgroups.Update;
+import org.football.country.Country;
 
 import javax.persistence.*;
 import javax.validation.constraints.NotNull;

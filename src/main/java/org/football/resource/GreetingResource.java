@@ -1,4 +1,4 @@
-package org.resource;
+package org.football.resource;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;

@@ -1,8 +1,8 @@
-package org.country;
+package org.football.country;
 
-import org.util.validationgroups.Any;
-import org.util.validationgroups.Create;
-import org.util.validationgroups.Update;
+import org.football.util.validationgroups.Any;
+import org.football.util.validationgroups.Create;
+import org.football.util.validationgroups.Update;
 
 import javax.persistence.*;
 import javax.validation.constraints.NotNull;

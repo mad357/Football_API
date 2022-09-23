@@ -1,4 +1,4 @@
-package org.country;
+package org.football.country;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;

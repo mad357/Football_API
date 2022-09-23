@@ -1,4 +1,4 @@
-package org.club;
+package org.football.club;
 
 public interface IClubRepository {
 }

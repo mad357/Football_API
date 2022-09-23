@@ -1,4 +1,4 @@
-package org.league;
+package org.football.league;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;

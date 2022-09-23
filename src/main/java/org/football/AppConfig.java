@@ -1,4 +1,4 @@
-package org;
+package org.football;
 
 import javax.validation.Validation;
 import javax.validation.Validator;
