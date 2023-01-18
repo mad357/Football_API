@@ -44,3 +44,4 @@ bin/
 .settings/
 target/
 src/main/resources/application.properties
+*.der

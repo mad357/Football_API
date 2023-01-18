@@ -1,37 +1,32 @@
 package org.football.club;
 
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 import org.football.league.League;
-import org.football.util.validationgroups.Any;
-import org.football.util.validationgroups.Create;
-import org.football.util.validationgroups.Update;
 import org.football.country.Country;
 
 import javax.persistence.*;
-import javax.validation.constraints.NotNull;
-import javax.validation.constraints.Null;
-import javax.validation.constraints.Size;
 
 @Entity
 @Table(name = "CLUB")
+@AllArgsConstructor
+@NoArgsConstructor
+@Getter
+@Setter
 public class Club {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "CLUB_ID", nullable = false)
-    @NotNull(message = "Id cannot be null", groups = Update.class)
-    @Null(message = "Country cannot contain id", groups = Create.class)
     private Long id;
 
-    @Size(max = 50, message = "name size exceeded")
-    @NotNull(message = "Name cannot be null", groups =  Any.class)
     @Column(name = "NAME")
     private String name;
 
-    @Size(max = 100, message = "full name size exceeded")
-    @NotNull(message = "Fullname cannot be null", groups =  Any.class)
     @Column(name = "FULLNAME")
     private String fullname;
 
-    @Size(max = 50, message = "alias size exceeded")
     @Column(name = "ALIAS")
     private String alias;
 
@@ -46,59 +41,4 @@ public class Club {
     @JoinColumn(name = "COUNTRY_ID",referencedColumnName = "COUNTRY_ID")
     private Country country;
 
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    public String getFullname() {
-        return fullname;
-    }
-
-    public void setFullname(String fullname) {
-        this.fullname = fullname;
-    }
-
-    public String getAlias() {
-        return alias;
-    }
-
-    public void setAlias(String alias) {
-        this.alias = alias;
-    }
-
-    public short getYearFounded() {
-        return yearFounded;
-    }
-
-    public void setYearFounded(short yearFounded) {
-        this.yearFounded = yearFounded;
-    }
-
-    public League getLeague() {
-        return league;
-    }
-
-    public void setLeague(League league) {
-        this.league = league;
-    }
-
-    public Country getCountry() {
-        return country;
-    }
-
-    public void setCountry(Country country) {
-        this.country = country;
-    }
 }

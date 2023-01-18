@@ -27,7 +27,8 @@ public class ClubResource {
     @GET
     @Path("/{id}")
     public Club getClub(@PathParam("id") long id) {
-        return clubRepository.findByIdOptional(id).orElse(null);
+        //return clubRepository.findByIdOptional(id).orElse(null);
+        return clubRepository.find("select c from Club c LEFT JOIN FETCH c.league where c.id = ?1", id).firstResult();
     }
 
     @POST

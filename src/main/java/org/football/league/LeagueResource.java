@@ -1,11 +1,20 @@
 package org.football.league;
 
+import annotations.Authorized;
+import annotations.AllowedRoles;
+import org.football.club.Club;
+import org.football.club.ClubDto;
+import org.modelmapper.ModelMapper;
+import org.modelmapper.PropertyMap;
+
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.ws.rs.*;
 import javax.ws.rs.core.*;
 import java.util.List;
+import java.util.stream.Collectors;
+
 
 @Path("/league")
 @ApplicationScoped
@@ -19,20 +28,55 @@ public class LeagueResource {
     @Inject
     LeagueService leagueService;
 
+    @Context
+    UriInfo info;
+
+    final ModelMapper modelMapper;
+    public LeagueResource() {
+        modelMapper = new ModelMapper();
+        modelMapper.addMappings(new PropertyMap<Club, ClubDto>() {
+            @Override
+            protected void configure() {
+                skip(destination.getLeague());
+                //modelMapper.getConfiguration().setPropertyCondition(Conditions.isNotNull());
+                //modelMapper.getConfiguration().setSkipNullEnabled(true);
+            }
+        });
+    }
+
     @GET
     @Path("/list")
-    public List<League> list() {
-        return leagueRepository.listAll();
+    @Authorized()
+    @AllowedRoles({"admin", "user"})
+    public List<LeagueDto> list() {
+        List<League> result = leagueRepository.listAll();
+        if (result == null) {
+            return null;
+        }
+        return result
+                .stream()
+                .map(element -> modelMapper.map(element, LeagueDto.class))
+                .collect(Collectors.toList());
     }
     @GET
     @Path("/{id}")
-    public League getLeague(@PathParam("id") long id) {
-        return leagueRepository.findByIdOptional(id).orElse(null);
+    @Authorized()
+    @AllowedRoles({"admin", "user"})
+    public LeagueDto getLeague(@PathParam("id") long id) {
+        var entity = leagueRepository.findByIdOptional(id).orElse(null);
+        if (entity == null) {
+            return null;
+        }
+
+        return modelMapper.map(entity, LeagueDto.class);
     }
 
     @POST
-    public Response create(League league, @Context UriInfo uriInfo) {
+    @Authorized()
+    @AllowedRoles({"admin", "user"})
+    public Response create(LeagueDto leagueDto, @Context UriInfo uriInfo) {
         try {
+            var league =  modelMapper.map(leagueDto, League.class);
             long id = leagueService.create(league);
             UriBuilder uriBuilder = uriInfo.getAbsolutePathBuilder();
             uriBuilder.path(String.valueOf(id));
@@ -43,13 +87,18 @@ public class LeagueResource {
     }
 
     @PUT
-    public Response update(League league, @Context UriInfo uriInfo) {
+    @Authorized()
+    @AllowedRoles({"admin", "user"})
+    public Response update(LeagueDto leagueDto, @Context UriInfo uriInfo) {
+        League league = modelMapper.map(leagueDto, League.class);
         leagueService.update(league);
         return Response.ok().build();
     }
 
     @DELETE
     @Path("/{id}")
+    @Authorized()
+    @AllowedRoles({"admin", "user"})
     public Response delete(@PathParam("id") Long id,  @Context UriInfo uriInfo) {
         leagueService.delete(id);
         return Response.ok().build();

@@ -1,6 +1,8 @@
 package org.football;
 
+import org.football.country.CountryDto;
 import org.football.league.League;
+import org.football.league.LeagueDto;
 import org.football.league.LeagueRepository;
 import org.football.league.LeagueService;
 import org.football.util.validationgroups.Create;
@@ -19,11 +21,10 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-public class LeagueTest {
+public class LeagueAllowedRolesTest {
 
     @Mock
     LeagueRepository leagueRepository;
@@ -82,17 +83,17 @@ public class LeagueTest {
 
     @Test()
     public void checkFieldsDuringActions(){
-        Country c1 = new Country();
+        CountryDto c1 = new CountryDto();
         c1.setId(1L);
-        League l = new League();
-        Set<ConstraintViolation<League>> errors = AppConfig.getValidator().validate(l, Create.class);
+        LeagueDto l = new LeagueDto();
+        Set<ConstraintViolation<LeagueDto>> errors = AppConfig.getValidator().validate(l, Create.class);
         assertEquals(3, errors.size());
         errors = AppConfig.getValidator().validate(l, Update.class);
         assertEquals(4, errors.size());
         l.setId(1L);
         errors = AppConfig.getValidator().validate(l, Update.class);
         assertEquals(3, errors.size());
-        l.setCountry(c1);
+        l.setCountryId(c1.getId());
         errors = AppConfig.getValidator().validate(l, Update.class);
         assertEquals(2, errors.size());
         l.setName("2 liga");
