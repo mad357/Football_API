@@ -49,4 +49,10 @@ public class UserResource {
     public String login(User user, @Context UriInfo uriInfo) {
         return userService.login(user.getLogin(), user.getPassword());
     }
+
+    @POST
+    @Path("/refresh-token")
+    public String refreshToken(String refreshToken, @Context UriInfo uriInfo) {
+        return userService.loginWithRefreshToken(refreshToken);
+    }
 }
