@@ -12,8 +12,9 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import javax.ws.rs.*;
 import javax.ws.rs.core.*;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 
 @Path("/league")
@@ -30,6 +31,9 @@ public class LeagueResource {
 
     @Context
     UriInfo info;
+
+    @Context
+    HttpHeaders headers;
 
     final ModelMapper modelMapper;
     public LeagueResource() {
@@ -49,14 +53,22 @@ public class LeagueResource {
     @Authorized()
     @AllowedRoles({"admin", "user"})
     public List<LeagueDto> list() {
-        List<League> result = leagueRepository.listAll();
-        if (result == null) {
-            return null;
+        List<League> result = null;
+        if (info.getQueryParameters().size() == 0) {
+            result = leagueRepository.listAll();
+        } else {
+            StringBuilder query = new StringBuilder ();
+            Map<String, Object> nonNullParams = new HashMap<>();
+            addFilters(query, nonNullParams);
+
+            result = leagueRepository.list(query.toString(), nonNullParams);
         }
+
         return result
                 .stream()
                 .map(element -> modelMapper.map(element, LeagueDto.class))
                 .collect(Collectors.toList());
+
     }
     @GET
     @Path("/{id}")
@@ -104,4 +116,51 @@ public class LeagueResource {
         return Response.ok().build();
     }
 
+    private void addFilters(StringBuilder query, Map<String, Object> params) {
+        MultivaluedMap<String, String> parameters = info.getQueryParameters();
+        boolean firstParameter = true;
+        query.append("select DISTINCT l from League l JOIN l.lowerLeagues ll JOIN l.higherLeagues hl where ");
+
+        if (parameters.get("countryId") != null) {
+            firstParameter = false;
+            query.append("l.country.id = :countryId");
+            params.put("countryId", Long.parseLong(parameters.get("countryId").get(0)));
+        }
+
+        if (parameters.get("name") != null) {
+            if (!firstParameter){
+                query.append(" AND ");
+            }
+            firstParameter = false;
+            query.append("l.name like UPPER(:name)");
+            params.put("name", "%" + parameters.get("name").get(0).toUpperCase() +"%");
+        }
+
+        if (parameters.get("clubNumber") != null) {
+            if (!firstParameter){
+                query.append(" AND ");
+            }
+            firstParameter = false;
+            query.append("l.clubNumber = :clubNumber");
+            params.put("clubNumber", Short.parseShort(parameters.get("clubNumber").get(0)));
+        }
+
+        if (parameters.get("lowerLeagueId") != null) {
+            if (!firstParameter){
+                query.append(" AND ");
+            }
+            firstParameter = false;
+            query.append("ll.id IN (:lowerLeagueId)");
+            params.put("lowerLeagueId", new HashSet<>(Arrays.asList( Long.parseLong(parameters.get("lowerLeagueId").get(0)))));
+        }
+
+        if (parameters.get("higherLeagueId") != null) {
+            if (!firstParameter){
+                query.append(" AND ");
+            }
+            firstParameter = false;
+            query.append("hl.id IN (:higherLeagueId)");
+            params.put("higherLeagueId", new HashSet<>(Arrays.asList( Long.parseLong(parameters.get("higherLeagueId").get(0)))));
+        }
+    }
 }

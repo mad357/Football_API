@@ -6,6 +6,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.football.club.Club;
 import org.football.country.Country;
+import org.hibernate.annotations.Filter;
 
 import javax.persistence.*;
 import java.io.Serializable;
@@ -61,7 +62,7 @@ public class League implements Serializable {
             inverseJoinColumns = @JoinColumn(name = "HIGHER_LEAGUE_ID"))
     private Set<League> higherLeagues;
 
-    @OneToMany(fetch = FetchType.LAZY, mappedBy="league")
-    private List<Club> clubs;
+//    @OneToMany(fetch = FetchType.LAZY, mappedBy="league")
+//    private List<Club> clubs;
 
 }

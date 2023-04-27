@@ -10,6 +10,7 @@ import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import javax.transaction.Transactional;
 import javax.ws.rs.NotAuthorizedException;
+import javax.ws.rs.core.Response;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -48,13 +49,16 @@ public class UserService {
         User user = userRepository.find( "login = ?1 and password = ?2", login, password).firstResult();
 
         if (user != null) {
-                JSONObject result = new JSONObject()
-                        .put("access_token", generateAccessToken(user))
-                        .put("refresh_token", generateRefreshToken(user));
+            JSONObject result = new JSONObject()
+                    .put("access_token", generateAccessToken(user))
+                    .put("refresh_token", generateRefreshToken(user));
 
-                return result.toString();
+            return result.toString();
         }
-        throw new NotAuthorizedException("Invalid login or password");
+        throw new NotAuthorizedException(
+                Response.status(Response.Status.UNAUTHORIZED)
+                .entity("Invalid login or password")
+                .build());
     }
 
     private String generateAccessToken(User user) {
@@ -65,7 +69,7 @@ public class UserService {
         payload.put("login", user.getLogin());
         long time = java.time.Instant.now().getEpochSecond();
         payload.put("iat", time);
-        payload.put("exp", time + 7200);
+        payload.put("exp", time + 10000);
         payload.put("nbf", 0);
         payload.put("typ", "Bearer");
 
