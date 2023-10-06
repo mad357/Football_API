@@ -36,7 +36,7 @@ public class ClubDto {
     @Size(max = 50, message = "alias size exceeded")
     private String alias;
 
-    private short yearFounded;
+    private Short yearFound;
 
     private LeagueDto league;
 

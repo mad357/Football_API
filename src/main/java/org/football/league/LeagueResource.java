@@ -1,7 +1,7 @@
 package org.football.league;
 
-import annotations.Authorized;
 import annotations.AllowedRoles;
+import annotations.Authorized;
 import org.football.club.Club;
 import org.football.club.ClubDto;
 import org.modelmapper.ModelMapper;
@@ -14,7 +14,6 @@ import javax.ws.rs.*;
 import javax.ws.rs.core.*;
 import java.util.*;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 
 @Path("/league")
@@ -53,7 +52,7 @@ public class LeagueResource {
     @Authorized()
     @AllowedRoles({"admin", "user"})
     public List<LeagueDto> list() {
-        List<League> result = null;
+        List<League> result;
         if (info.getQueryParameters().size() == 0) {
             result = leagueRepository.listAll();
         } else {
@@ -119,7 +118,7 @@ public class LeagueResource {
     private void addFilters(StringBuilder query, Map<String, Object> params) {
         MultivaluedMap<String, String> parameters = info.getQueryParameters();
         boolean firstParameter = true;
-        query.append("select DISTINCT l from League l JOIN l.lowerLeagues ll JOIN l.higherLeagues hl where ");
+        query.append("select DISTINCT l from League l LEFT JOIN l.lowerLeagues ll LEFT JOIN l.higherLeagues hl where ");
 
         if (parameters.get("countryId") != null) {
             firstParameter = false;
@@ -132,7 +131,7 @@ public class LeagueResource {
                 query.append(" AND ");
             }
             firstParameter = false;
-            query.append("l.name like UPPER(:name)");
+            query.append("UPPER(l.name) like :name");
             params.put("name", "%" + parameters.get("name").get(0).toUpperCase() +"%");
         }
 
@@ -158,7 +157,6 @@ public class LeagueResource {
             if (!firstParameter){
                 query.append(" AND ");
             }
-            firstParameter = false;
             query.append("hl.id IN (:higherLeagueId)");
             params.put("higherLeagueId", new HashSet<>(Arrays.asList( Long.parseLong(parameters.get("higherLeagueId").get(0)))));
         }

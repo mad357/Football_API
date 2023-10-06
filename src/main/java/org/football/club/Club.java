@@ -31,7 +31,7 @@ public class Club {
     private String alias;
 
     @Column(name = "YEAR_FOUNDED")
-    private short yearFounded;
+    private Short yearFound;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "LEAGUE_ID",referencedColumnName = "LEAGUE_ID")

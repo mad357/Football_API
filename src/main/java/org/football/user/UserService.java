@@ -45,6 +45,17 @@ public class UserService {
     }
 
     @Transactional
+    public void registerUser(User user) {
+        User alreadyExist = userRepository.find( "login = ?1 ", user.getLogin()).firstResult();
+        if (alreadyExist != null) {
+            throw new RuntimeException("Username already taken");
+        }
+        else {
+            userRepository.persist(user);
+        }
+    }
+
+    @Transactional
     public String login(String login, String password) {
         User user = userRepository.find( "login = ?1 and password = ?2", login, password).firstResult();
 

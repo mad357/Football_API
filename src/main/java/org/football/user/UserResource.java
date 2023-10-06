@@ -45,6 +45,18 @@ public class UserResource {
 //    }
 
     @POST
+    @Path("/register")
+    public Response register(User user, @Context UriInfo uriInfo) {
+        try {
+            userService.registerUser(user);
+            UriBuilder uriBuilder = uriInfo.getAbsolutePathBuilder();
+            return Response.created(uriBuilder.build()).build();
+        } catch (RuntimeException e) {
+            return Response.status(Response.Status.CONFLICT).entity(e.getMessage()).build();
+        }
+    }
+
+    @POST
     @Path("/login")
     public String login(User user, @Context UriInfo uriInfo) {
         return userService.login(user.getLogin(), user.getPassword());
