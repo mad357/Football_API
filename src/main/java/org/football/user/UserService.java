@@ -5,6 +5,8 @@ import com.auth0.jwt.JWTVerifier;
 import com.auth0.jwt.algorithms.Algorithm;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.json.JSONObject;
+import org.modelmapper.ModelMapper;
+import org.modelmapper.PropertyMap;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
@@ -15,6 +17,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.security.KeyFactory;
+import java.security.NoSuchAlgorithmException;
 import java.security.interfaces.RSAPrivateKey;
 import java.security.interfaces.RSAPublicKey;
 import java.security.spec.PKCS8EncodedKeySpec;
@@ -24,6 +27,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+
+import static org.football.user.Passwords.isExpectedPassword;
 
 
 @ApplicationScoped
@@ -39,27 +44,41 @@ public class UserService {
     @ConfigProperty(name = "private.key.path")
     private String privateKeyPath;
 
+    final ModelMapper modelMapper;
+
     @Inject
     public UserService(@ConfigProperty(name = "application.url") String apiUrl) {
         this.apiUrl = apiUrl;
+        modelMapper = new ModelMapper();
+        modelMapper.addMappings(new PropertyMap<UserDto, User>() {
+            @Override
+            protected void configure() {
+                skip(destination.getPassword());
+            }
+        });
     }
 
     @Transactional
-    public void registerUser(User user) {
-        User alreadyExist = userRepository.find( "login = ?1 ", user.getLogin()).firstResult();
+    public void registerUser(UserDto userDto) throws NoSuchAlgorithmException {
+        User alreadyExist = userRepository.find( "login = ?1 ", userDto.getLogin()).firstResult();
         if (alreadyExist != null) {
             throw new RuntimeException("Username already taken");
         }
         else {
+            User user =  modelMapper.map(userDto, User.class);
+            byte[] salt = Passwords.getNextSalt();
+            byte[] hash = Passwords.hash(userDto.getPassword().toCharArray(), salt);
+            user.setSalt(salt);
+            user.setPassword(hash);
             userRepository.persist(user);
         }
     }
 
     @Transactional
     public String login(String login, String password) {
-        User user = userRepository.find( "login = ?1 and password = ?2", login, password).firstResult();
+        User user = userRepository.find( "login = ?1", login).firstResult();
+        if (user != null && password != null && isExpectedPassword(password.toCharArray(), user.getSalt(), user.getPassword())) {
 
-        if (user != null) {
             JSONObject result = new JSONObject()
                     .put("access_token", generateAccessToken(user))
                     .put("refresh_token", generateRefreshToken(user));

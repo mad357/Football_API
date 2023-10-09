@@ -5,6 +5,7 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import javax.ws.rs.*;
 import javax.ws.rs.core.*;
+import java.security.NoSuchAlgorithmException;
 
 @Path("/user")
 @ApplicationScoped
@@ -14,51 +15,25 @@ import javax.ws.rs.core.*;
 public class UserResource {
 
     @Inject
-    UserRepository userRepository;
-
-    @Inject
     UserService userService;
-    
-    @GET
-    @Path("/{id}")
-    public User getUser(@PathParam("id") long id) {
-        return userRepository.findByIdOptional(id).orElse(null);
-    }
-
-//    @POST
-//    public Response create(User user, @Context UriInfo uriInfo) {
-//        try {
-//            long id = userService.create(user);
-//            UriBuilder uriBuilder = uriInfo.getAbsolutePathBuilder();
-//            uriBuilder.path(String.valueOf(id));
-//            return Response.created(uriBuilder.build()).build();
-//        } catch (RuntimeException e) {
-//            return Response.status(Response.Status.CONFLICT).entity(e.getMessage()).build();
-//        }
-//    }
-
-//    @DELETE
-//    @Path("/{id}")
-//    public Response delete(@PathParam("id") Long id,  @Context UriInfo uriInfo) {
-//        userService.delete(id);
-//        return Response.ok().build();
-//    }
 
     @POST
     @Path("/register")
-    public Response register(User user, @Context UriInfo uriInfo) {
+    public Response register(UserDto user, @Context UriInfo uriInfo) {
         try {
             userService.registerUser(user);
             UriBuilder uriBuilder = uriInfo.getAbsolutePathBuilder();
             return Response.created(uriBuilder.build()).build();
         } catch (RuntimeException e) {
             return Response.status(Response.Status.CONFLICT).entity(e.getMessage()).build();
+        } catch (NoSuchAlgorithmException e) {
+            throw new RuntimeException(e);
         }
     }
 
     @POST
     @Path("/login")
-    public String login(User user, @Context UriInfo uriInfo) {
+    public String login(UserDto user, @Context UriInfo uriInfo) {
         return userService.login(user.getLogin(), user.getPassword());
     }
 

@@ -4,10 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import org.football.util.validationgroups.Any;
-
 import javax.persistence.*;
-import javax.validation.constraints.NotNull;
 import java.io.Serializable;
 import java.util.Set;
 
@@ -27,9 +24,8 @@ public class User implements Serializable {
     @Column(name = "LOGIN")
     private String login;
 
-    @NotNull(message = "Password cannot be null", groups =  Any.class)
     @Column(name = "PASSWORD")
-    private String password;
+    private byte[] password;
 
     @Column(name = "FIRST_NAME")
     private String firstName;
@@ -37,7 +33,9 @@ public class User implements Serializable {
     @Column(name = "LAST_NAME")
     private String lastName;
 
-    //@JsonIgnore
+    @Column(name = "SALT")
+    private byte[] salt;
+
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
             name = "USER_ROLE",
