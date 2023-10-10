@@ -46,6 +46,9 @@ public class UserService {
 
     final ModelMapper modelMapper;
 
+    @ConfigProperty(name = "password.pepper")
+    private String pepper;
+
     @Inject
     public UserService(@ConfigProperty(name = "application.url") String apiUrl) {
         this.apiUrl = apiUrl;
@@ -67,7 +70,7 @@ public class UserService {
         else {
             User user =  modelMapper.map(userDto, User.class);
             byte[] salt = Passwords.getNextSalt();
-            byte[] hash = Passwords.hash(userDto.getPassword().toCharArray(), salt);
+            byte[] hash = Passwords.hash((userDto.getPassword() + pepper).toCharArray(), salt);
             user.setSalt(salt);
             user.setPassword(hash);
             userRepository.persist(user);
@@ -77,7 +80,7 @@ public class UserService {
     @Transactional
     public String login(String login, String password) {
         User user = userRepository.find( "login = ?1", login).firstResult();
-        if (user != null && password != null && isExpectedPassword(password.toCharArray(), user.getSalt(), user.getPassword())) {
+        if (user != null && password != null && isExpectedPassword((password + pepper).toCharArray(), user.getSalt(), user.getPassword())) {
 
             JSONObject result = new JSONObject()
                     .put("access_token", generateAccessToken(user))
