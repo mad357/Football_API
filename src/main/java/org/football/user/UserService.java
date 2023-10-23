@@ -10,8 +10,10 @@ import org.modelmapper.PropertyMap;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
+import javax.persistence.PersistenceException;
 import javax.transaction.Transactional;
 import javax.ws.rs.NotAuthorizedException;
+import javax.ws.rs.ServerErrorException;
 import javax.ws.rs.core.Response;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -79,19 +81,26 @@ public class UserService {
 
     @Transactional
     public String login(String login, String password) {
-        User user = userRepository.find( "login = ?1", login).firstResult();
-        if (user != null && password != null && isExpectedPassword((password + pepper).toCharArray(), user.getSalt(), user.getPassword())) {
+        try {
+            User user = userRepository.find("login = ?1", login).firstResult();
+            if (user != null && password != null && isExpectedPassword((password + pepper).toCharArray(), user.getSalt(), user.getPassword())) {
 
-            JSONObject result = new JSONObject()
-                    .put("access_token", generateAccessToken(user))
-                    .put("refresh_token", generateRefreshToken(user));
+                JSONObject result = new JSONObject()
+                        .put("access_token", generateAccessToken(user))
+                        .put("refresh_token", generateRefreshToken(user));
 
-            return result.toString();
+                return result.toString();
+            }
+        } catch (PersistenceException e) {
+            throw new ServerErrorException(
+                    Response.status(Response.Status.GATEWAY_TIMEOUT)
+                            .entity("Database connection error")
+                            .build());
         }
         throw new NotAuthorizedException(
                 Response.status(Response.Status.UNAUTHORIZED)
-                .entity("Invalid login or password")
-                .build());
+                        .entity("Invalid login or password")
+                        .build());
     }
 
     private String generateAccessToken(User user) {
