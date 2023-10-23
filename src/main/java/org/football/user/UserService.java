@@ -3,6 +3,7 @@ package org.football.user;
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.JWTVerifier;
 import com.auth0.jwt.algorithms.Algorithm;
+import exceptions.DuplicateException;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.json.JSONObject;
 import org.modelmapper.ModelMapper;
@@ -15,6 +16,7 @@ import javax.transaction.Transactional;
 import javax.ws.rs.NotAuthorizedException;
 import javax.ws.rs.ServerErrorException;
 import javax.ws.rs.core.Response;
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -22,6 +24,7 @@ import java.security.KeyFactory;
 import java.security.NoSuchAlgorithmException;
 import java.security.interfaces.RSAPrivateKey;
 import java.security.interfaces.RSAPublicKey;
+import java.security.spec.InvalidKeySpecException;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.security.spec.X509EncodedKeySpec;
 import java.util.Base64;
@@ -64,10 +67,10 @@ public class UserService {
     }
 
     @Transactional
-    public void registerUser(UserDto userDto) throws NoSuchAlgorithmException {
+    public void registerUser(UserDto userDto) {
         User alreadyExist = userRepository.find( "login = ?1 ", userDto.getLogin()).firstResult();
         if (alreadyExist != null) {
-            throw new RuntimeException("Username already taken");
+            throw new DuplicateException("Username already taken");
         }
         else {
             User user =  modelMapper.map(userDto, User.class);
@@ -97,13 +100,19 @@ public class UserService {
                             .entity("Database connection error")
                             .build());
         }
+        catch (InvalidKeySpecException | NoSuchAlgorithmException | IOException e) {
+            throw new ServerErrorException(
+                    Response.status(Response.Status.INTERNAL_SERVER_ERROR)
+                            .entity("Error during creating user token")
+                            .build());
+        }
         throw new NotAuthorizedException(
                 Response.status(Response.Status.UNAUTHORIZED)
                         .entity("Invalid login or password")
                         .build());
     }
 
-    private String generateAccessToken(User user) {
+    private String generateAccessToken(User user) throws InvalidKeySpecException, NoSuchAlgorithmException, IOException {
         Map<String, Object> headerClaims = new HashMap<>();
         headerClaims.put("typ", "JWT");
         headerClaims.put("alg", "RS256");
@@ -119,7 +128,7 @@ public class UserService {
 
         List<String> roles = user.getRoles().stream().map(Role::getName).collect(Collectors.toList());
         payload.put("roles", roles);
-        try {
+
             Path path = Paths.get(privateKeyPath);
             byte[] dataPrivate = Files.readAllBytes(path);
             path = Paths.get(publicKeyPath);
@@ -139,12 +148,10 @@ public class UserService {
 
            return token;
 
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
+
     }
 
-    private String generateRefreshToken(User user) {
+    private String generateRefreshToken(User user) throws IOException, NoSuchAlgorithmException, InvalidKeySpecException {
         Map<String, Object> headerClaims = new HashMap<>();
         headerClaims.put("typ", "JWT");
         headerClaims.put("alg", "RS256");
@@ -157,29 +164,25 @@ public class UserService {
         payload.put("typ", "Bearer");
         payload.put("iss", apiUrl);
 
-        try {
-            Path path = Paths.get(privateKeyPath);
-            byte[] dataPrivate = Files.readAllBytes(path);
-            path = Paths.get(publicKeyPath);
-            byte[] dataPublic = Files.readAllBytes(path);
+        Path path = Paths.get(privateKeyPath);
+        byte[] dataPrivate = Files.readAllBytes(path);
+        path = Paths.get(publicKeyPath);
+        byte[] dataPublic = Files.readAllBytes(path);
 
-            KeyFactory kf = KeyFactory.getInstance("RSA");
-            PKCS8EncodedKeySpec keySpecPKCS8 = new PKCS8EncodedKeySpec(dataPrivate);
-            RSAPrivateKey privKey = (RSAPrivateKey) kf.generatePrivate(keySpecPKCS8);
-            X509EncodedKeySpec keySpecX509 = new X509EncodedKeySpec(dataPublic);
-            RSAPublicKey pubKey = (RSAPublicKey) kf.generatePublic(keySpecX509);
+        KeyFactory kf = KeyFactory.getInstance("RSA");
+        PKCS8EncodedKeySpec keySpecPKCS8 = new PKCS8EncodedKeySpec(dataPrivate);
+        RSAPrivateKey privKey = (RSAPrivateKey) kf.generatePrivate(keySpecPKCS8);
+        X509EncodedKeySpec keySpecX509 = new X509EncodedKeySpec(dataPublic);
+        RSAPublicKey pubKey = (RSAPublicKey) kf.generatePublic(keySpecX509);
 
-            Algorithm algorithm = Algorithm.RSA256( pubKey, privKey);
-            String token = JWT.create()
-                    .withHeader(headerClaims)
-                    .withPayload(payload)
-                    .sign(algorithm);
+        Algorithm algorithm = Algorithm.RSA256( pubKey, privKey);
+        String token = JWT.create()
+                .withHeader(headerClaims)
+                .withPayload(payload)
+                .sign(algorithm);
 
-            return token;
+        return token;
 
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
     }
 
     @Transactional

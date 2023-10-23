@@ -1,11 +1,19 @@
 package org.football.country;
 
+import exceptions.DtoValidationException;
+import org.football.AppConfig;
+import org.football.util.validationgroups.Create;
+import org.football.util.validationgroups.Update;
+import org.modelmapper.ModelMapper;
+
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import javax.inject.Named;
+import javax.validation.ConstraintViolation;
 import javax.ws.rs.*;
 import javax.ws.rs.core.*;
 import java.util.List;
+import java.util.Set;
 
 @Path("/country")
 @ApplicationScoped
@@ -19,6 +27,11 @@ public class CountryResource {
 
     @Inject
     CountryService countryService;
+
+    final ModelMapper modelMapper;
+    public CountryResource() {
+        modelMapper = new ModelMapper();
+    }
     
     @GET
     @Path("/list")
@@ -32,19 +45,25 @@ public class CountryResource {
     }
 
     @POST
-    public Response create(Country country, @Context UriInfo uriInfo) {
-        try {
-            long id = countryService.create(country);
-            UriBuilder uriBuilder = uriInfo.getAbsolutePathBuilder();
-            uriBuilder.path(String.valueOf(id));
-            return Response.created(uriBuilder.build()).build();
-        } catch (RuntimeException e) {
-            return Response.status(Response.Status.CONFLICT).entity(e.getMessage()).build();
+    public Response create(CountryDto countryDto, @Context UriInfo uriInfo) {
+        Set<ConstraintViolation<CountryDto>> errors = AppConfig.getValidator().validate(countryDto, Create.class);
+        if (errors.size() > 0) {
+            throw new DtoValidationException(errors.iterator().next().getMessage());
         }
+        var country =  modelMapper.map(countryDto, Country.class);
+        long id = countryService.create(country);
+        UriBuilder uriBuilder = uriInfo.getAbsolutePathBuilder();
+        uriBuilder.path(String.valueOf(id));
+        return Response.created(uriBuilder.build()).build();
     }
 
     @PUT
-    public Response update(Country country, @Context UriInfo uriInfo) {
+    public Response update(CountryDto countryDto, @Context UriInfo uriInfo) {
+        Set<ConstraintViolation<CountryDto>> errors = AppConfig.getValidator().validate(countryDto, Update.class);
+        if (errors.size() > 0) {
+            throw new DtoValidationException(errors.iterator().next().getMessage());
+        }
+        var country =  modelMapper.map(countryDto, Country.class);
         countryService.update(country);
         return Response.ok().build();
     }

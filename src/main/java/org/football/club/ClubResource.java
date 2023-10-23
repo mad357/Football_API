@@ -2,19 +2,20 @@ package org.football.club;
 
 import annotations.AllowedRoles;
 import annotations.Authorized;
+import exceptions.DtoValidationException;
 import io.quarkus.panache.common.Page;
+import org.football.AppConfig;
+import org.football.util.validationgroups.Create;
+import org.football.util.validationgroups.Update;
 import org.modelmapper.ModelMapper;
 import org.modelmapper.PropertyMap;
-
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import javax.inject.Named;
+import javax.validation.ConstraintViolation;
 import javax.ws.rs.*;
 import javax.ws.rs.core.*;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 
@@ -124,7 +125,10 @@ public class ClubResource {
     @Authorized()
     @AllowedRoles({"admin", "user"})
     public Response update(ClubDto clubDto, @Context UriInfo uriInfo) {
-
+        Set<ConstraintViolation<ClubDto>> errors = AppConfig.getValidator().validate(clubDto, Update.class);
+        if (errors.size() > 0) {
+            throw new DtoValidationException(errors.iterator().next().getMessage());
+        }
         Club club = modelMapper.map(clubDto, Club.class);
         clubService.update(club);
         return Response.ok().build();
@@ -134,15 +138,16 @@ public class ClubResource {
     @Authorized()
     @AllowedRoles({"admin", "user"})
     public Response create(ClubDto clubDto, @Context UriInfo uriInfo) {
-        try {
-            var club =  modelMapper.map(clubDto, Club.class);
-            long id = clubService.create(club);
-            UriBuilder uriBuilder = uriInfo.getAbsolutePathBuilder();
-            uriBuilder.path(String.valueOf(id));
-            return Response.created(uriBuilder.build()).build();
-        } catch (RuntimeException e) {
-            return Response.status(Response.Status.CONFLICT).entity(e.getMessage()).build();
+        Set<ConstraintViolation<ClubDto>> errors = AppConfig.getValidator().validate(clubDto, Create.class);
+        if (errors.size() > 0) {
+            throw new DtoValidationException(errors.iterator().next().getMessage());
         }
+
+        var club =  modelMapper.map(clubDto, Club.class);
+        long id = clubService.create(club);
+        UriBuilder uriBuilder = uriInfo.getAbsolutePathBuilder();
+        uriBuilder.path(String.valueOf(id));
+        return Response.created(uriBuilder.build()).build();
     }
 
     @DELETE

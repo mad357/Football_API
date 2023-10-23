@@ -2,14 +2,19 @@ package org.football.league;
 
 import annotations.AllowedRoles;
 import annotations.Authorized;
+import exceptions.DtoValidationException;
+import org.football.AppConfig;
 import org.football.club.Club;
 import org.football.club.ClubDto;
+import org.football.util.validationgroups.Create;
+import org.football.util.validationgroups.Update;
 import org.modelmapper.ModelMapper;
 import org.modelmapper.PropertyMap;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import javax.inject.Named;
+import javax.validation.ConstraintViolation;
 import javax.ws.rs.*;
 import javax.ws.rs.core.*;
 import java.util.*;
@@ -86,21 +91,25 @@ public class LeagueResource {
     @Authorized()
     @AllowedRoles({"admin", "user"})
     public Response create(LeagueDto leagueDto, @Context UriInfo uriInfo) {
-        try {
-            var league =  modelMapper.map(leagueDto, League.class);
-            long id = leagueService.create(league);
-            UriBuilder uriBuilder = uriInfo.getAbsolutePathBuilder();
-            uriBuilder.path(String.valueOf(id));
-            return Response.created(uriBuilder.build()).build();
-        } catch (RuntimeException e) {
-            return Response.status(Response.Status.CONFLICT).entity(e.getMessage()).build();
+        Set<ConstraintViolation<LeagueDto>> errors = AppConfig.getValidator().validate(leagueDto, Create.class);
+        if (errors.size() > 0) {
+            throw new DtoValidationException(errors.iterator().next().getMessage());
         }
+        var league =  modelMapper.map(leagueDto, League.class);
+        long id = leagueService.create(league);
+        UriBuilder uriBuilder = uriInfo.getAbsolutePathBuilder();
+        uriBuilder.path(String.valueOf(id));
+        return Response.created(uriBuilder.build()).build();
     }
 
     @PUT
     @Authorized()
     @AllowedRoles({"admin", "user"})
     public Response update(LeagueDto leagueDto, @Context UriInfo uriInfo) {
+        Set<ConstraintViolation<LeagueDto>> errors = AppConfig.getValidator().validate(leagueDto, Update.class);
+        if (errors.size() > 0) {
+            throw new DtoValidationException(errors.iterator().next().getMessage());
+        }
         League league = modelMapper.map(leagueDto, League.class);
         leagueService.update(league);
         return Response.ok().build();

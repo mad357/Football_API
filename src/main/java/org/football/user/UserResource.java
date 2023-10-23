@@ -5,7 +5,6 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import javax.ws.rs.*;
 import javax.ws.rs.core.*;
-import java.security.NoSuchAlgorithmException;
 
 @Path("/user")
 @ApplicationScoped
@@ -20,15 +19,9 @@ public class UserResource {
     @POST
     @Path("/register")
     public Response register(UserDto user, @Context UriInfo uriInfo) {
-        try {
-            userService.registerUser(user);
-            UriBuilder uriBuilder = uriInfo.getAbsolutePathBuilder();
-            return Response.created(uriBuilder.build()).build();
-        } catch (RuntimeException e) {
-            return Response.status(Response.Status.CONFLICT).entity(e.getMessage()).build();
-        } catch (NoSuchAlgorithmException e) {
-            throw new RuntimeException(e);
-        }
+        userService.registerUser(user);
+        UriBuilder uriBuilder = uriInfo.getAbsolutePathBuilder();
+        return Response.created(uriBuilder.build()).build();
     }
 
     @POST
